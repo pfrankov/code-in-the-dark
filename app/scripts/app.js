@@ -14,6 +14,7 @@ class App {
   constructor() {
     // Power mode settings
     this.POWER_MODE_ACTIVATION_THRESHOLD = 200;
+    this.COMBO_ANIMATION_THRESHOLD = this.POWER_MODE_ACTIVATION_THRESHOLD / 4; // 50 - четверть пути до Power Mode
     this.STREAK_TIMEOUT = 10 * 1000;
 
     // Particle settings
@@ -336,9 +337,11 @@ class App {
       .text(this.currentStreak)
       .removeClass("bump");
 
-    _.defer(() => {
-      this.$streakCounter.addClass("bump");
-    });
+    if (this.currentStreak >= this.COMBO_ANIMATION_THRESHOLD) {
+      _.defer(() => {
+        this.$streakCounter.addClass("bump");
+      });
+    }
   }
 
   refreshStreakBar() {
