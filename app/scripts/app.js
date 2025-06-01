@@ -28,7 +28,6 @@ class App {
     };
 
     // UI settings
-    this.EXCLAMATION_EVERY = 10;
     this.EXCLAMATION_TIMEOUT = 3000;
     this.SHAKE_DURATION = 75;
     this.CURSOR_OFFSET = { x: 4, y: 10 };
@@ -63,6 +62,9 @@ class App {
     this.particlePointer = 0;
     this.lastDraw = 0;
     this.i18n = new I18n();
+    
+    this.lastInputTime = 0;
+    this.INPUT_DEBOUNCE_TIME = 50; // 50ms защита от двойного ввода
 
     this.init();
   }
@@ -247,6 +249,13 @@ class App {
   }
 
   onUserInput(e) {
+    // Защита от двойного подсчета очков
+    const currentTime = Date.now();
+    if (currentTime - this.lastInputTime < this.INPUT_DEBOUNCE_TIME) {
+      return;
+    }
+    this.lastInputTime = currentTime;
+    
     this.increaseStreak();
     this.debouncedEndStreak();
     this.throttledShake();
@@ -270,8 +279,8 @@ class App {
   increaseStreak() {
     this.currentStreak++;
     
-    if (this.currentStreak > 0 && this.currentStreak % this.EXCLAMATION_EVERY === 0) {
-      this.showExclamation();
+    if (!this.powerMode && this.currentStreak < this.POWER_MODE_ACTIVATION_THRESHOLD) {
+      this.checkAndShowExclamation();
     }
 
     if (this.currentStreak >= this.POWER_MODE_ACTIVATION_THRESHOLD && !this.powerMode) {
@@ -280,6 +289,40 @@ class App {
 
     this.refreshStreakBar();
     this.renderStreak();
+  }
+
+  checkAndShowExclamation() {
+    const exclamations = this.i18n.getArray('exclamations');
+    if (exclamations.length === 0) {
+      return;
+    }
+    
+    const maxExclamations = exclamations.length;
+    const interval = Math.floor(this.POWER_MODE_ACTIVATION_THRESHOLD / maxExclamations);
+    
+  
+    if (this.currentStreak % interval === 0) {
+      const exclamationNumber = Math.floor(this.currentStreak / interval) - 1;
+      
+      if (exclamationNumber >= 0 && exclamationNumber < maxExclamations) {
+        this.showExclamationByIndex(exclamationNumber);
+      }
+    }
+  }
+
+  showExclamationByIndex(index) {
+    const exclamations = this.i18n.getArray('exclamations');
+    if (index < 0 || index >= exclamations.length) {
+      return;
+    }
+    
+    const exclamationText = exclamations[index];
+    const $exclamation = $("<span>")
+      .addClass("exclamation")
+      .text(exclamationText);
+
+    this.$exclamations.prepend($exclamation);
+    setTimeout(() => $exclamation.remove(), this.EXCLAMATION_TIMEOUT);
   }
 
   endStreak() {
@@ -310,16 +353,6 @@ class App {
         "transition": `all ${this.STREAK_TIMEOUT}ms linear`
       });
     });
-  }
-
-  showExclamation() {
-    const exclamations = this.i18n.getArray('exclamations');
-    const $exclamation = $("<span>")
-      .addClass("exclamation")
-      .text(_.sample(exclamations));
-
-    this.$exclamations.prepend($exclamation);
-    setTimeout(() => $exclamation.remove(), this.EXCLAMATION_TIMEOUT);
   }
 
   getCursorPosition() {
