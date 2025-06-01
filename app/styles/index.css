@@ -249,12 +249,19 @@ body.power-mode #editor .ace_entity.ace_other.ace_attribute-name {
 
 .reference-screenshot-container .reference-screenshot {
   width: 200px;
-  height: 160px;
+  height: auto;
   margin-top: 15px;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
   display: none;
+  object-fit: contain;
+  max-height: 300px;
+}
+
+.reference-screenshot-container .reference-screenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 300px;
+  object-fit: contain;
 }
 
 .reference-screenshot-container.active {
@@ -269,7 +276,15 @@ body.power-mode #editor .ace_entity.ace_other.ace_attribute-name {
   width: 100%;
   height: 100%;
   margin-top: 0;
-  background-size: contain;
+  object-fit: contain;
+  max-height: none;
+}
+
+.reference-screenshot-container.active .reference-screenshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: none;
 }
 
 .reference-screenshot-container.active span {
@@ -305,7 +320,7 @@ body.power-mode #editor .ace_entity.ace_other.ace_attribute-name {
   z-index: 40;
   bottom: 20px;
   left: 20px;
-  padding: 20px;
+  padding: 20px 14px 14px 20px;
   background: var(--transparent-primary);
   color: var(--white);
   font-size: 56px;

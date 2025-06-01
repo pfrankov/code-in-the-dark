@@ -4,40 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code in the Dark</title>
-  <script src="bundle.js" inline></script>
 </head>
 <body>
+  <div class="drag-drop-overlay">
+    <div class="drag-drop-content">
+      <span class="icon">📁</span>
+      <span data-i18n="ui.dropImageHere">Drop your reference image here</span>
+    </div>
+  </div>
   <div class="background"></div>
   <canvas class="canvas-overlay"></canvas>
   <pre id="editor"></pre>
   <div class="streak-container">
-      <div class="current">Combo</div>
+      <div class="current" data-i18n="ui.combo">Combo</div>
       <div class="counter">0</div>
       <div class="bar"></div>
       <div class="exclamations"></div>
   </div>
   <div class="reference-screenshot-container">
-    <span>Reference</span>
-    <div class="reference-screenshot" style="background-image:url(assets/page.png);"></div>
+    <span class="no-image-text" data-i18n="ui.dropReference">Drop a reference</span>
+    <span class="has-image-text" data-i18n="ui.reference">Reference</span>
+    <div class="reference-screenshot"></div>
   </div>
 
-  <div class="name-tag">
+  <div class="name-tag" data-i18n="ui.unnamed">
     Unnamed
   </div>
 
   <div class="power-mode-indicator">
-    <h1>POWER MODE!</h1>
+    <h1 data-i18n="ui.powerMode">POWER MODE!</h1>
   </div>
 
   <div class="instructions-container">
-    <iframe class="instructions" src="assets/instructions.html"></iframe>
+    <iframe class="instructions" src="instructions.html"></iframe>
   </div>
 
   <div class="button-bar">
-    <button class="finish-button">Finish</button>
-    <button class="instructions-button">Instructions</button>
+    <button class="finish-button" data-i18n="ui.finish">Finish</button>
+    <button class="instructions-button" data-i18n="ui.instructions">Instructions</button>
   </div>
 
-  <iframe class="result" src="assets/result.html" frameborder="0"></iframe>
+  <iframe class="result" src="result.html" frameborder="0"></iframe>
+  
+  <script type="module" src="scripts/app.js"></script>
 </body>
 </html>

@@ -8,6 +8,8 @@ import "ace-builds/src-noconflict/mode-html";
 import "ace-builds/src-noconflict/theme-vibrant_ink";
 import "ace-builds/src-noconflict/ext-searchbox";
 
+import I18n from "./i18n.js";
+
 class App {
   constructor() {
     // Power mode settings
@@ -48,10 +50,6 @@ class App {
       "comment.xml": [0, 255, 121]
     };
 
-    this.EXCLAMATIONS = ["Super!", "Radical!", "Fantastic!", "Great!", "OMG",
-      "Whoah!", ":O", "Nice!", "Splendid!", "Wild!", "Grand!", "Impressive!",
-      "Stupendous!", "Extreme!", "Awesome!"];
-
     // Storage keys
     this.STORAGE_KEYS = {
       name: "name",
@@ -64,11 +62,13 @@ class App {
     this.particles = [];
     this.particlePointer = 0;
     this.lastDraw = 0;
+    this.i18n = new I18n();
 
     this.init();
   }
 
-  init() {
+  async init() {
+    await this.i18n.init();
     this.cacheElements();
     this.setupCanvas();
     this.setupThrottledMethods();
@@ -79,6 +79,7 @@ class App {
     this.loadReference();
     this.getName();
     this.startAnimationLoop();
+    this.setupIframeMessaging();
   }
 
   cacheElements() {
@@ -126,6 +127,23 @@ class App {
     requestAnimationFrame(this.onFrame.bind(this));
   }
 
+  setupIframeMessaging() {
+    // Listen for translation requests from iframe
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'requestTranslations') {
+        // Send translations to iframe
+        const iframe = document.querySelector('.instructions');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'translations',
+            translations: this.i18n.translations,
+            language: this.i18n.getCurrentLanguage()
+          }, '*');
+        }
+      }
+    });
+  }
+
   bindEvents() {
     this.editor.getSession().on("change", (e) => {
       if (this.isUserTyping(e)) {
@@ -134,9 +152,9 @@ class App {
       this.debouncedSaveContent();
     });
     
-    $(window).on("beforeunload", () => "Hold your horses!");
+    $(window).on("beforeunload", () => this.i18n.t('prompts.beforeUnload'));
     
-    // Отвязываем старые обработчики
+    // Remove old event handlers
     $(".instructions-button").off("click");
     $(".instructions-container").off("click");
     this.$reference.off("click");
@@ -150,14 +168,14 @@ class App {
       this.onClickInstructions();
     });
     
-    // Закрытие инструкций по клику на фон
+    // Close instructions by clicking on background
     $(".instructions-container").on("click", (e) => {
       if (e.target === e.currentTarget) {
         this.onClickInstructions();
       }
     });
     
-    // Закрытие инструкций и референса по Esc
+    // Close instructions and reference with Esc
     $(document).on("keydown.instructions", (e) => {
       if (e.key === "Escape") {
         if (this.$body.hasClass("show-instructions")) {
@@ -194,7 +212,8 @@ class App {
   }
 
   getName(forceUpdate = false) {
-    const name = (!forceUpdate && this.getFromStorage(this.STORAGE_KEYS.name)) || prompt("What's your name?");
+    const name = (!forceUpdate && this.getFromStorage(this.STORAGE_KEYS.name)) || 
+                 prompt(this.i18n.t('prompts.namePrompt'));
     if (name) {
       this.saveToStorage(this.STORAGE_KEYS.name, name);
       this.$nameTag.text(name);
@@ -294,9 +313,10 @@ class App {
   }
 
   showExclamation() {
+    const exclamations = this.i18n.getArray('exclamations');
     const $exclamation = $("<span>")
       .addClass("exclamation")
-      .text(_.sample(this.EXCLAMATIONS));
+      .text(_.sample(exclamations));
 
     this.$exclamations.prepend($exclamation);
     setTimeout(() => $exclamation.remove(), this.EXCLAMATION_TIMEOUT);
@@ -400,6 +420,18 @@ class App {
     this.$body.toggleClass("show-instructions");
     if (!this.$body.hasClass("show-instructions")) {
       this.editor.focus();
+    } else {
+      // Send translations to iframe when showing instructions
+      setTimeout(() => {
+        const iframe = document.querySelector('.instructions');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'translations',
+            translations: this.i18n.translations,
+            language: this.i18n.getCurrentLanguage()
+          }, '*');
+        }
+      }, 100);
     }
   }
 
@@ -416,19 +448,21 @@ class App {
   }
 
   onClickFinish() {
-    const confirm = prompt(`
-      This will show the results of your code. Doing this before the round is over
-      WILL DISQUALIFY YOU. Are you sure you want to proceed? Type "yes" to confirm.
-    `);
+    const confirm = prompt(this.i18n.t('prompts.finishConfirm'));
 
-    if (confirm?.toLowerCase() === "yes") {
-      this.$result[0].contentWindow.postMessage(this.editor.getValue(), "*");
-      this.$result.show();
+    if (confirm) {
+      const confirmWord = this.i18n.t('prompts.confirmWord');
+      const userInput = confirm.toLowerCase().trim();
+      
+      if (userInput === confirmWord.toLowerCase()) {
+        this.$result[0].contentWindow.postMessage(this.editor.getValue(), "*");
+        this.$result.show();
+      }
     }
   }
 
   setupDragDrop() {
-    this.dragCounter = 0; // Счётчик для отслеживания вложенных drag событий
+    this.dragCounter = 0; // Counter for tracking nested drag events
     
     // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -471,12 +505,12 @@ class App {
   }
 
   handleDragOver(e) {
-    // Просто предотвращаем дефолтное поведение
-    // Overlay уже показан через handleDragEnter
+    // Just prevent default behavior
+    // Overlay is already shown through handleDragEnter
   }
 
   handleDrop(e) {
-    this.dragCounter = 0; // Сбрасываем счётчик
+    this.dragCounter = 0; // Reset counter
     this.$dragDropOverlay.removeClass('active');
     
     const dt = e.dataTransfer;
@@ -491,7 +525,7 @@ class App {
     const file = files[0];
     
     if (!file.type.startsWith('image/')) {
-      alert('Блять, это не картинка! Загружай только изображения.');
+      alert(this.i18n.t('prompts.notAnImage'));
       return;
     }
 
@@ -505,7 +539,13 @@ class App {
   }
 
   setReferenceImage(imageData) {
-    this.$referenceImage.css('background-image', `url(${imageData})`);
+    // Clear any existing content
+    this.$referenceImage.empty();
+    
+    // Create img element for proper aspect ratio handling
+    const $img = $('<img>').attr('src', imageData);
+    
+    this.$referenceImage.append($img);
     this.$reference.addClass('has-image');
   }
 }

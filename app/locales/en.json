@@ -1,0 +1,35 @@
+{
+  "ui": {
+    "combo": "Combo",
+    "unnamed": "Unnamed",
+    "powerMode": "POWER MODE!",
+    "finish": "Finish",
+    "instructions": "Instructions",
+    "reference": "Reference",
+    "dropReference": "Drop a reference",
+    "dropImageHere": "Drop your reference image here"
+  },
+  "prompts": {
+    "namePrompt": "What's your name?",
+    "finishConfirm": "This will show the results of your code. Doing this before the round is over WILL DISQUALIFY YOU. Are you sure you want to proceed? Type \"yes\" to confirm.",
+    "beforeUnload": "Hold your horses!",
+    "notAnImage": "This is not an image! Please upload images only.",
+    "confirmWord": "yes"
+  },
+  "exclamations": [
+    "Super!", "Radical!", "Fantastic!", "Great!", "OMG",
+    "Whoah!", ":O", "Nice!", "Splendid!", "Wild!", "Grand!", 
+    "Impressive!", "Stupendous!", "Extreme!", "Awesome!"
+  ],
+  "instructions": {
+    "title": "The rules",
+    "rules": [
+      "No previews - of either results or assets!",
+      "Stay in this editor at all times",
+      "No measurement tools", 
+      "Stop coding when the time's up",
+      "After the round is over, press \"Finish\" and follow the prompt instructions to see your results"
+    ],
+    "footer": "Good luck and most important of all; have fun!"
+  }
+} 
