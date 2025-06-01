@@ -1,0 +1,22 @@
+{
+  "name": "code-in-the-dark",
+  "version": "0.2.2",
+  "description": "Code in the Dark editor",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "brace": "^0.5.1",
+    "jquery": "^3.7.1",
+    "underscore": "^1.13.6"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
+  }
+}
