@@ -36,7 +36,7 @@ export default defineConfig({
             
             // Если запрашивается languages.json, генерируем его на лету
             if (fileName === 'languages.json') {
-              const localesDir = resolve('./locales')
+              const localesDir = resolve('./app/locales')
               const languages = getAvailableLanguages(localesDir)
               res.setHeader('Content-Type', 'application/json')
               res.setHeader('Access-Control-Allow-Origin', '*')
@@ -44,7 +44,7 @@ export default defineConfig({
               return
             }
             
-            const localePath = resolve('./locales', fileName)
+            const localePath = resolve('./app/locales', fileName)
             if (existsSync(localePath)) {
               res.setHeader('Content-Type', 'application/json')
               res.setHeader('Access-Control-Allow-Origin', '*')
@@ -59,9 +59,10 @@ export default defineConfig({
     },
     {
       name: 'copy-locales-to-dist',
-      generateBundle() {
+      writeBundle() {
         // Автоматически копируем все локали в dist при билде
-        const localesDir = resolve('./locales')
+        const localesDir = resolve('./app/locales')
+        // Копируем в корень dist, чтобы пути ./locales/ работали
         const outputDir = resolve('../dist/locales')
         
         if (!existsSync(outputDir)) {
@@ -73,7 +74,7 @@ export default defineConfig({
         
         // Копируем все файлы локалей
         languages.forEach(lang => {
-          const src = resolve('./locales', `${lang}.json`)
+          const src = resolve('./app/locales', `${lang}.json`)
           const dest = resolve('../dist/locales', `${lang}.json`)
           if (existsSync(src)) {
             copyFileSync(src, dest)
