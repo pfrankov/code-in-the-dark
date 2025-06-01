@@ -55,7 +55,8 @@ class App {
     // Storage keys
     this.STORAGE_KEYS = {
       name: "name",
-      content: "content"
+      content: "content",
+      reference: "reference"
     };
 
     this.currentStreak = 0;
@@ -74,6 +75,8 @@ class App {
     this.setupEditor();
     this.loadContent();
     this.bindEvents();
+    this.setupDragDrop();
+    this.loadReference();
     this.getName();
     this.startAnimationLoop();
   }
@@ -88,6 +91,8 @@ class App {
     this.$editor = $("#editor");
     this.$finish = $(".finish-button");
     this.$body = $("body");
+    this.$dragDropOverlay = $(".drag-drop-overlay");
+    this.$referenceImage = $(".reference-screenshot");
   }
 
   setupCanvas() {
@@ -207,18 +212,18 @@ class App {
 
   getFromStorage(key) {
     try {
-      return localStorage[key];
+      return sessionStorage[key];
     } catch (e) {
-      console.warn('Failed to read from localStorage:', e);
+      console.warn('Failed to read from sessionStorage:', e);
       return null;
     }
   }
 
   saveToStorage(key, value) {
     try {
-      localStorage[key] = value;
+      sessionStorage[key] = value;
     } catch (e) {
-      console.warn('Failed to save to localStorage:', e);
+      console.warn('Failed to save to sessionStorage:', e);
     }
   }
 
@@ -399,6 +404,11 @@ class App {
   }
 
   onClickReference() {
+    // Only allow clicking if there's an image
+    if (!this.$reference.hasClass('has-image')) {
+      return;
+    }
+    
     this.$reference.toggleClass("active");
     if (!this.$reference.hasClass("active")) {
       this.editor.focus();
@@ -415,6 +425,88 @@ class App {
       this.$result[0].contentWindow.postMessage(this.editor.getValue(), "*");
       this.$result.show();
     }
+  }
+
+  setupDragDrop() {
+    this.dragCounter = 0; // Счётчик для отслеживания вложенных drag событий
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      document.addEventListener(eventName, this.preventDefaults.bind(this), false);
+    });
+
+    // Highlight drop area when item is dragged over it
+    document.addEventListener('dragenter', this.handleDragEnter.bind(this), false);
+    document.addEventListener('dragleave', this.handleDragLeave.bind(this), false);
+    document.addEventListener('dragover', this.handleDragOver.bind(this), false);
+
+    // Handle dropped files
+    document.addEventListener('drop', this.handleDrop.bind(this), false);
+  }
+
+  loadReference() {
+    const referenceData = this.getFromStorage(this.STORAGE_KEYS.reference);
+    if (referenceData) {
+      this.setReferenceImage(referenceData);
+    }
+  }
+
+  preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  handleDragEnter(e) {
+    this.dragCounter++;
+    if (this.dragCounter === 1) {
+      this.$dragDropOverlay.addClass('active');
+    }
+  }
+
+  handleDragLeave(e) {
+    this.dragCounter--;
+    if (this.dragCounter === 0) {
+      this.$dragDropOverlay.removeClass('active');
+    }
+  }
+
+  handleDragOver(e) {
+    // Просто предотвращаем дефолтное поведение
+    // Overlay уже показан через handleDragEnter
+  }
+
+  handleDrop(e) {
+    this.dragCounter = 0; // Сбрасываем счётчик
+    this.$dragDropOverlay.removeClass('active');
+    
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length > 0) {
+      this.handleFiles(files);
+    }
+  }
+
+  handleFiles(files) {
+    const file = files[0];
+    
+    if (!file.type.startsWith('image/')) {
+      alert('Блять, это не картинка! Загружай только изображения.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageData = e.target.result;
+      this.setReferenceImage(imageData);
+      this.saveToStorage(this.STORAGE_KEYS.reference, imageData);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  setReferenceImage(imageData) {
+    this.$referenceImage.css('background-image', `url(${imageData})`);
+    this.$reference.addClass('has-image');
   }
 }
 

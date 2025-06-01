@@ -6,6 +6,12 @@
   <title>Code in the Dark</title>
 </head>
 <body>
+  <div class="drag-drop-overlay">
+    <div class="drag-drop-content">
+      <span class="icon">📁</span>
+      Drop your reference image here
+    </div>
+  </div>
   <div class="background"></div>
   <canvas class="canvas-overlay"></canvas>
   <pre id="editor"></pre>
@@ -16,8 +22,9 @@
       <div class="exclamations"></div>
   </div>
   <div class="reference-screenshot-container">
-    <span>Reference</span>
-    <div class="reference-screenshot" style="background-image:url(page.png);"></div>
+    <span class="no-image-text">Drop a reference</span>
+    <span class="has-image-text">Reference</span>
+    <div class="reference-screenshot"></div>
   </div>
 
   <div class="name-tag">
