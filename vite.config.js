@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { copyFileSync, mkdirSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'fs'
-import { resolve } from 'path'
+import { resolve, join } from 'path'
 
 export default defineConfig({
   base: './',
@@ -36,7 +36,7 @@ export default defineConfig({
             
             // Если запрашивается languages.json, генерируем его на лету
             if (fileName === 'languages.json') {
-              const localesDir = resolve('./app/locales')
+              const localesDir = resolve(process.cwd(), 'app', 'locales')
               const languages = getAvailableLanguages(localesDir)
               res.setHeader('Content-Type', 'application/json')
               res.setHeader('Access-Control-Allow-Origin', '*')
@@ -44,7 +44,7 @@ export default defineConfig({
               return
             }
             
-            const localePath = resolve('./app/locales', fileName)
+            const localePath = resolve(process.cwd(), 'app', 'locales', fileName)
             if (existsSync(localePath)) {
               res.setHeader('Content-Type', 'application/json')
               res.setHeader('Access-Control-Allow-Origin', '*')
@@ -60,32 +60,53 @@ export default defineConfig({
     {
       name: 'copy-locales-to-dist',
       writeBundle() {
-        // Автоматически копируем все локали в dist при билде
-        const localesDir = resolve('./app/locales')
-        // Копируем в корень dist, чтобы пути ./locales/ работали
-        const outputDir = resolve('../dist/locales')
-        
-        if (!existsSync(outputDir)) {
-          mkdirSync(outputDir, { recursive: true })
-        }
-        
-        // Получаем список всех доступных языков
-        const languages = getAvailableLanguages(localesDir)
-        
-        // Копируем все файлы локалей
-        languages.forEach(lang => {
-          const src = resolve('./app/locales', `${lang}.json`)
-          const dest = resolve('../dist/locales', `${lang}.json`)
-          if (existsSync(src)) {
-            copyFileSync(src, dest)
-            console.log(`Copied locale to dist: ${lang}.json`)
+        try {
+          console.log('Starting locale copy process...')
+          console.log('Current working directory:', process.cwd())
+          
+          // Используем абсолютные пути от корня проекта
+          const projectRoot = process.cwd()
+          const localesDir = join(projectRoot, 'app', 'locales')
+          const outputDir = join(projectRoot, 'dist', 'locales')
+          
+          console.log('Source locales directory:', localesDir)
+          console.log('Target output directory:', outputDir)
+          console.log('Locales directory exists:', existsSync(localesDir))
+          
+          if (!existsSync(outputDir)) {
+            console.log('Creating output directory...')
+            mkdirSync(outputDir, { recursive: true })
           }
-        })
-        
-        // Генерируем файл со списком языков
-        const languagesFile = resolve('../dist/locales', 'languages.json')
-        writeFileSync(languagesFile, JSON.stringify({ languages }, null, 2))
-        console.log(`Generated languages list: ${languages.join(', ')}`)
+          
+          // Получаем список всех доступных языков
+          const languages = getAvailableLanguages(localesDir)
+          console.log('Available languages:', languages)
+          
+          // Копируем все файлы локалей
+          languages.forEach(lang => {
+            const src = join(localesDir, `${lang}.json`)
+            const dest = join(outputDir, `${lang}.json`)
+            console.log(`Copying ${src} -> ${dest}`)
+            
+            if (existsSync(src)) {
+              copyFileSync(src, dest)
+              console.log(`✓ Copied locale: ${lang}.json`)
+            } else {
+              console.warn(`✗ Source file not found: ${src}`)
+            }
+          })
+          
+          // Генерируем файл со списком языков
+          const languagesFile = join(outputDir, 'languages.json')
+          const languagesData = JSON.stringify({ languages }, null, 2)
+          writeFileSync(languagesFile, languagesData)
+          console.log(`✓ Generated languages list: ${languages.join(', ')}`)
+          console.log('Locale copy process completed successfully!')
+          
+        } catch (error) {
+          console.error('Error during locale copy process:', error)
+          throw error
+        }
       }
     }
   ]
@@ -93,6 +114,8 @@ export default defineConfig({
 
 // Функция для получения списка доступных языков из папки
 function getAvailableLanguages(localesDir) {
+  console.log('Getting available languages from:', localesDir)
+  
   if (!existsSync(localesDir)) {
     console.warn('Locales directory not found, using fallback languages')
     return ['en', 'ru']
@@ -100,10 +123,14 @@ function getAvailableLanguages(localesDir) {
   
   try {
     const files = readdirSync(localesDir)
+    console.log('Files in locales directory:', files)
+    
     const languages = files
       .filter(file => file.endsWith('.json'))
       .map(file => file.replace('.json', ''))
       .sort()
+    
+    console.log('Detected languages:', languages)
     
     // Убеждаемся, что английский всегда первый (дефолтный)
     if (languages.includes('en')) {
