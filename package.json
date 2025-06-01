@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "brace": "^0.5.1",
+    "ace-builds": "^1.41.0",
     "jquery": "^3.7.1",
     "underscore": "^1.13.6"
   },

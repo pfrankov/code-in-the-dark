@@ -3,10 +3,10 @@ import "../styles/index.css";
 import _ from "underscore";
 import $ from "jquery";
 
-import ace from "brace";
-import "brace/mode/html";
-import "brace/theme/vibrant_ink";
-import "brace/ext/searchbox";
+import ace from "ace-builds";
+import "ace-builds/src-noconflict/mode-html";
+import "ace-builds/src-noconflict/theme-vibrant_ink";
+import "ace-builds/src-noconflict/ext-searchbox";
 
 class App {
   constructor() {

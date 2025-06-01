@@ -11,10 +11,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['jquery', 'underscore', 'brace']
+          vendor: ['jquery', 'underscore', 'ace-builds']
         }
       }
     }
   },
-  publicDir: 'app/assets'
+  publicDir: 'app/assets',
+  optimizeDeps: {
+    include: ['ace-builds']
+  }
 }) 
