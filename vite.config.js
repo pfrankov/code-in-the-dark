@@ -28,13 +28,13 @@ export default defineConfig({
     {
       name: 'serve-locales-dev',
       configureServer(server) {
-        // Сервим локали напрямую из app/locales в dev-режиме
+        // Serve locale files directly from app/locales in development mode
         server.middlewares.use('/locales', (req, res, next) => {
           const url = req.url
           if (url && url.endsWith('.json')) {
-            const fileName = url.substring(1) // убираем первый слеш
+            const fileName = url.substring(1) // Remove leading slash
             
-            // Если запрашивается languages.json, генерируем его на лету
+            // Generate languages.json on-the-fly when requested
             if (fileName === 'languages.json') {
               const localesDir = resolve(process.cwd(), 'app', 'locales')
               const languages = getAvailableLanguages(localesDir)
@@ -64,7 +64,7 @@ export default defineConfig({
           console.log('Starting locale copy process...')
           console.log('Current working directory:', process.cwd())
           
-          // Используем абсолютные пути от корня проекта
+          // Use absolute paths from project root
           const projectRoot = process.cwd()
           const localesDir = join(projectRoot, 'app', 'locales')
           const outputDir = join(projectRoot, 'dist', 'locales')
@@ -78,11 +78,11 @@ export default defineConfig({
             mkdirSync(outputDir, { recursive: true })
           }
           
-          // Получаем список всех доступных языков
+          // Get list of all available languages
           const languages = getAvailableLanguages(localesDir)
           console.log('Available languages:', languages)
           
-          // Копируем все файлы локалей
+          // Copy all locale files to distribution directory
           languages.forEach(lang => {
             const src = join(localesDir, `${lang}.json`)
             const dest = join(outputDir, `${lang}.json`)
@@ -96,7 +96,7 @@ export default defineConfig({
             }
           })
           
-          // Генерируем файл со списком языков
+          // Generate languages list file for runtime consumption
           const languagesFile = join(outputDir, 'languages.json')
           const languagesData = JSON.stringify({ languages }, null, 2)
           writeFileSync(languagesFile, languagesData)
@@ -112,7 +112,7 @@ export default defineConfig({
   ]
 })
 
-// Функция для получения списка доступных языков из папки
+// Helper function to scan locales directory and return available language codes
 function getAvailableLanguages(localesDir) {
   console.log('Getting available languages from:', localesDir)
   
@@ -132,7 +132,7 @@ function getAvailableLanguages(localesDir) {
     
     console.log('Detected languages:', languages)
     
-    // Убеждаемся, что английский всегда первый (дефолтный)
+    // Ensure English is always first (default language)
     if (languages.includes('en')) {
       languages.splice(languages.indexOf('en'), 1)
       languages.unshift('en')

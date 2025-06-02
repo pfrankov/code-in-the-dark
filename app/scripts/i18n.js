@@ -2,7 +2,7 @@ class I18n {
   constructor() {
     this.currentLanguage = 'en';
     this.translations = {};
-    this.supportedLanguages = []; // Будет заполнен автоматически
+    this.supportedLanguages = []; // Will be populated automatically
   }
 
   async init() {
@@ -14,13 +14,13 @@ class I18n {
 
   async loadSupportedLanguages() {
     try {
-      // Пытаемся загрузить список языков из сгенерированного файла
+      // Try to load language list from generated file
       const response = await fetch('./locales/languages.json');
       if (response.ok) {
         const data = await response.json();
         this.supportedLanguages = data.languages || ['en'];
       } else {
-        // Fallback к дефолтным языкам
+        // Fallback to default languages
         this.supportedLanguages = ['en', 'ru'];
       }
     } catch (error) {

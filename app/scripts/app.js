@@ -14,7 +14,7 @@ class App {
   constructor() {
     // Power mode settings
     this.POWER_MODE_ACTIVATION_THRESHOLD = 200;
-    this.COMBO_ANIMATION_THRESHOLD = this.POWER_MODE_ACTIVATION_THRESHOLD / 4; // 50 - четверть пути до Power Mode
+    this.COMBO_ANIMATION_THRESHOLD = this.POWER_MODE_ACTIVATION_THRESHOLD / 10;
     this.STREAK_TIMEOUT = 10 * 1000;
 
     // Particle settings
@@ -65,7 +65,7 @@ class App {
     this.i18n = new I18n();
     
     this.lastInputTime = 0;
-    this.INPUT_DEBOUNCE_TIME = 50; // 50ms защита от двойного ввода
+    this.INPUT_DEBOUNCE_TIME = 50; // 50ms debounce protection against double input
 
     this.init();
   }
@@ -250,7 +250,7 @@ class App {
   }
 
   onUserInput(e) {
-    // Защита от двойного подсчета очков
+    // Prevent double scoring from rapid consecutive inputs
     const currentTime = Date.now();
     if (currentTime - this.lastInputTime < this.INPUT_DEBOUNCE_TIME) {
       return;
