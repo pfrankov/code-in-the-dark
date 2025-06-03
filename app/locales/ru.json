@@ -2,12 +2,15 @@
   "ui": {
     "combo": "Комбо",
     "unnamed": "Безымянный",
-    "powerMode": "POWER MODE!",
+    "powerMode": "ТУРБО-РЕЖИМ!",
     "finish": "Завершить",
     "instructions": "Инструкции",
     "reference": "Референс",
     "dropReference": "Перетащите референс",
     "dropImageHere": "Перетащите изображение сюда"
+  },
+  "ai": {
+    "loader": "Генерирую..."
   },
   "prompts": {
     "namePrompt": "Как тебя зовут?",

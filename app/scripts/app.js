@@ -54,8 +54,24 @@ class App {
     this.STORAGE_KEYS = {
       name: "name",
       content: "content",
-      reference: "reference"
+      reference: "reference",
+      // New settings keys for localStorage (not sessionStorage)
+      competitionMode: "citd_competition_mode",
+      apiUrl: "citd_api_url", 
+      apiModel: "citd_api_model",
+      apiToken: "citd_api_token"
     };
+
+    // Competition modes
+    this.MODES = {
+      CODE: 'code',
+      AI: 'ai'
+    };
+
+    // Settings menu activation sequence
+    this.keySequence = [];
+    this.ACTIVATION_SEQUENCE = ['AltLeft', 'AltRight', 'Digit1'];
+    this.SEQUENCE_TIMEOUT = 500; // 500ms для быстрой активации
 
     this.currentStreak = 0;
     this.powerMode = false;
@@ -66,6 +82,10 @@ class App {
     
     this.lastInputTime = 0;
     this.INPUT_DEBOUNCE_TIME = 50; // 50ms debounce protection against double input
+
+    // Current competition mode
+    this.currentMode = this.MODES.CODE;
+    this.lastKeyTime = 0; // For settings menu activation sequence
 
     this.init();
   }
@@ -82,7 +102,8 @@ class App {
     this.loadReference();
     this.getName();
     this.startAnimationLoop();
-    this.setupIframeMessaging();
+    this.setupSettingsMenu();
+    this.loadSettings();
   }
 
   cacheElements() {
@@ -94,9 +115,18 @@ class App {
     this.$result = $(".result");
     this.$editor = $("#editor");
     this.$finish = $(".finish-button");
+    this.$aiLoader = $(".ai-loader");
     this.$body = $("body");
     this.$dragDropOverlay = $(".drag-drop-overlay");
     this.$referenceImage = $(".reference-screenshot");
+    
+    // New elements for settings menu
+    this.$settingsOverlay = $(".settings-menu-overlay");
+    this.$modeSelector = $(".mode-selector");
+    this.$aiSettings = $(".ai-settings");
+    this.$apiUrl = $(".api-url");
+    this.$apiModel = $(".api-model");
+    this.$apiToken = $(".api-token");
   }
 
   setupCanvas() {
@@ -128,23 +158,6 @@ class App {
 
   startAnimationLoop() {
     requestAnimationFrame(this.onFrame.bind(this));
-  }
-
-  setupIframeMessaging() {
-    // Listen for translation requests from iframe
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'requestTranslations') {
-        // Send translations to iframe
-        const iframe = document.querySelector('.instructions');
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: 'translations',
-            translations: this.i18n.translations,
-            language: this.i18n.getCurrentLanguage()
-          }, '*');
-        }
-      }
-    });
   }
 
   bindEvents() {
@@ -243,9 +256,9 @@ class App {
 
   saveToStorage(key, value) {
     try {
-      sessionStorage[key] = value;
+      sessionStorage.setItem(key, value);
     } catch (e) {
-      console.warn('Failed to save to sessionStorage:', e);
+      console.warn("Failed to save to sessionStorage:", e);
     }
   }
 
@@ -452,25 +465,6 @@ class App {
     this.$body.removeClass("power-mode");
   }
 
-  onClickInstructions() {
-    this.$body.toggleClass("show-instructions");
-    if (!this.$body.hasClass("show-instructions")) {
-      this.editor.focus();
-    } else {
-      // Send translations to iframe when showing instructions
-      setTimeout(() => {
-        const iframe = document.querySelector('.instructions');
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: 'translations',
-            translations: this.i18n.translations,
-            language: this.i18n.getCurrentLanguage()
-          }, '*');
-        }
-      }, 100);
-    }
-  }
-
   onClickReference() {
     // Only allow clicking if there's an image
     if (!this.$reference.hasClass('has-image')) {
@@ -491,8 +485,17 @@ class App {
       const userInput = confirm.toLowerCase().trim();
       
       if (userInput === confirmWord.toLowerCase()) {
-        this.$result[0].contentWindow.postMessage(this.editor.getValue(), "*");
-        this.$result.show();
+        // Get reference image data
+        const referenceData = this.getFromStorage(this.STORAGE_KEYS.reference);
+        
+        if (this.currentMode === this.MODES.AI) {
+          // AI mode - generate from prompt
+          this.generateWithAI(referenceData);
+        } else {
+          // Traditional code mode
+          const content = this.editor.getValue();
+          this.showResult(content, referenceData);
+        }
       }
     }
   }
@@ -556,7 +559,7 @@ class App {
       this.handleFiles(files);
     }
   }
-
+  
   handleFiles(files) {
     const file = files[0];
     
@@ -584,7 +587,267 @@ class App {
     this.$referenceImage.append($img);
     this.$reference.addClass('has-image');
   }
+
+  // New methods for localStorage (persistent settings)
+  getFromLocalStorage(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn("Failed to read from localStorage:", e);
+      return null;
+    }
+  }
+
+  saveToLocalStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn("Failed to save to localStorage:", e);
+    }
+  }
+
+  // Settings management
+  loadSettings() {
+    const mode = this.getFromStorage(this.STORAGE_KEYS.competitionMode) || this.MODES.CODE;
+    const apiUrl = this.getFromLocalStorage(this.STORAGE_KEYS.apiUrl) || 'https://api.openai.com/v1';
+    const apiModel = this.getFromLocalStorage(this.STORAGE_KEYS.apiModel) || 'gpt-3.5-turbo';
+    const apiToken = this.getFromLocalStorage(this.STORAGE_KEYS.apiToken) || '';
+
+    this.currentMode = mode;
+    this.$modeSelector.val(mode);
+    this.$apiUrl.val(apiUrl);
+    this.$apiModel.val(apiModel);
+    this.$apiToken.val(apiToken);
+
+    this.updateModeInterface();
+  }
+
+  saveSettings() {
+    const mode = this.$modeSelector.val();
+    const apiUrl = this.$apiUrl.val();
+    const apiModel = this.$apiModel.val();
+    const apiToken = this.$apiToken.val();
+
+    this.saveToStorage(this.STORAGE_KEYS.competitionMode, mode);
+    this.saveToLocalStorage(this.STORAGE_KEYS.apiUrl, apiUrl);
+    this.saveToLocalStorage(this.STORAGE_KEYS.apiModel, apiModel);
+    this.saveToLocalStorage(this.STORAGE_KEYS.apiToken, apiToken);
+
+    this.currentMode = mode;
+    this.updateModeInterface();
+  }
+
+  updateModeInterface() {
+    // Show/hide AI settings based on mode
+    if (this.$modeSelector.val() === this.MODES.AI) {
+      this.$aiSettings.show();
+    } else {
+      this.$aiSettings.hide();
+    }
+  }
+
+  // Settings menu setup
+  setupSettingsMenu() {
+    // Listen for key sequence to activate settings
+    $(document).on('keydown', (e) => {
+      this.handleKeySequence(e);
+      
+      // Close settings with Esc
+      if (e.key === "Escape" && this.$settingsOverlay.hasClass('active')) {
+        this.hideSettingsMenu();
+      }
+    });
+
+    // Auto-save settings on change
+    this.$modeSelector.on('change', () => {
+      this.saveSettings();
+    });
+
+    this.$apiUrl.on('input', () => {
+      this.saveSettings();
+    });
+
+    this.$apiModel.on('input', () => {
+      this.saveSettings();
+    });
+
+    this.$apiToken.on('input', () => {
+      this.saveSettings();
+    });
+
+    // Close settings on overlay click
+    this.$settingsOverlay.on('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hideSettingsMenu();
+      }
+    });
+  }
+
+  handleKeySequence(e) {
+    const key = e.code;
+    const now = Date.now();
+
+    // Reset sequence if too much time has passed
+    if (this.keySequence.length > 0 && now - this.lastKeyTime > this.SEQUENCE_TIMEOUT) {
+      this.keySequence = [];
+    }
+
+    this.lastKeyTime = now;
+
+    // Add key to sequence if it's part of the activation sequence
+    if (this.ACTIVATION_SEQUENCE.includes(key)) {
+      this.keySequence.push(key);
+
+      // Check if sequence is complete
+      if (this.keySequence.length === this.ACTIVATION_SEQUENCE.length) {
+        const isCorrectSequence = this.keySequence.every((k, i) => k === this.ACTIVATION_SEQUENCE[i]);
+        
+        if (isCorrectSequence) {
+          this.showSettingsMenu();
+        }
+        
+        this.keySequence = []; // Reset sequence
+      }
+    } else {
+      // Reset sequence if wrong key is pressed
+      this.keySequence = [];
+    }
+  }
+
+  showSettingsMenu() {
+    this.$settingsOverlay.addClass('active');
+    this.loadSettings(); // Refresh current settings
+  }
+
+  hideSettingsMenu() {
+    this.$settingsOverlay.removeClass('active');
+  }
+
+  // Extract HTML from LLM response (handles markdown, code blocks, etc.)
+  extractHTMLFromResponse(response) {
+    if (!response || typeof response !== 'string') {
+      return '';
+    }
+
+    let html = response.trim();
+
+    // Remove markdown code blocks (```html ... ``` or ``` ... ```)
+    html = html.replace(/^```(?:html)?\s*\n?([\s\S]*?)\n?```$/gm, '$1');
+    
+    // Remove single backticks around HTML
+    html = html.replace(/^`([\s\S]*?)`$/gm, '$1');
+    
+    // Remove explanatory text before HTML (common patterns)
+    html = html.replace(/^.*?(?=<!DOCTYPE|<html|<head|<body|<div|<main|<section)/s, '');
+    
+    // If no HTML tags found, wrap in basic HTML structure
+    if (!html.includes('<html') && !html.includes('<!DOCTYPE')) {
+      // Check if it looks like body content
+      if (html.includes('<') && (html.includes('<div') || html.includes('<p') || html.includes('<h') || html.includes('<span'))) {
+        html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Page</title>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+      }
+    }
+    
+    return html.trim();
+  }
+
+  async generateWithAI(referenceData) {
+    const prompt = this.editor.getValue().trim();
+    
+    if (!prompt) {
+      alert('Please enter a prompt in the editor first!');
+      return;
+    }
+
+    const baseApiUrl = this.$apiUrl.val();
+    const apiModel = this.$apiModel.val();
+    const apiToken = this.$apiToken.val();
+
+    if (!baseApiUrl || !apiModel || !apiToken) {
+      alert('Please configure API URL, model and token in settings first!\nUse: Left Alt → Right Alt → 1');
+      return;
+    }
+
+    // Construct full API URL by adding /chat/completions to base URL
+    const apiUrl = baseApiUrl.replace(/\/$/, '') + '/chat/completions';
+
+    // Show loading state
+    this.$aiLoader.addClass('active');
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
+        body: JSON.stringify({
+          model: apiModel,
+          messages: [
+            {
+              role: 'system',
+              content: `
+                You are a web developer.
+                Generate complete HTML code based on the user prompt.
+                Return ONLY the HTML code, no explanations or markdown formatting.
+                The HTML should be a complete ONE webpage with inline CSS styles and inline JS if needed.
+              `.replace(/\t/g, '').trim()
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const generatedHTML = data.choices[0].message.content;
+
+      // Extract HTML from LLM response (handles markdown, code blocks, etc.)
+      const extractedHTML = this.extractHTMLFromResponse(generatedHTML);
+
+      // Set the generated HTML to the result iframe
+      this.showResult(extractedHTML, referenceData);
+
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      alert(`Failed to generate with AI: ${error.message}`);
+    } finally {
+      this.$aiLoader.removeClass('active');
+    }
+  }
+
+  showResult(content, referenceData) {
+    // Send both content and reference to the result iframe
+    const messageData = {
+      type: 'content',
+      html: content,
+      reference: referenceData
+    };
+    
+    this.$result[0].contentWindow.postMessage(messageData, "*");
+    this.$result.show();
+    this.$body.addClass('result-page')
+  }
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
   new App();

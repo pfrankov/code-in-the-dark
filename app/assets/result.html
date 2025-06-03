@@ -3,17 +3,162 @@
   <head>
     <meta charset="utf-8">
     <title></title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
   <body>
-      <script>
-        window.addEventListener('message', function(e) {
-          if (
-            window.location.origin === 'file://' ||
-            window.location.origin === (e.origin || e.originalEvent.origin)
-          ) {
-            document.documentElement.innerHTML = e.data
+    <script>
+      // Global variables for content management
+      let currentReference = null;
+
+      // Handle messages from parent window
+      window.addEventListener('message', function(e) {
+        if (
+          window.location.origin === 'file://' ||
+          window.location.origin === (e.origin || e.originalEvent.origin)
+        ) {
+          if (typeof e.data === 'object' && e.data.type === 'content') {
+            // New format: {type: 'content', html: '...', reference: '...'}
+            replaceDocument(e.data.html);
+            
+            if (e.data.reference) {
+              currentReference = e.data.reference;
+              injectReferenceSystem();
+            }
+          } else if (typeof e.data === 'object' && e.data.type === 'setupReference') {
+            // Reference injection from parent window
+            injectCSS(e.data.css);
+            injectJS(e.data.js);
+          } else if (typeof e.data === 'string') {
+            // Legacy format: just HTML string
+            replaceDocument(e.data);
           }
-        })
-      </script>
+        }
+      });
+
+      // Replace document content and execute scripts
+      function replaceDocument(htmlContent) {
+        try {
+          // Method 1: Try document.write approach
+          document.open();
+          document.write(htmlContent);
+          document.close();
+          
+          // Restore reference after document replacement
+          setTimeout(() => {
+            if (currentReference) {
+              injectReferenceSystem();
+            }
+          }, 50);
+          
+        } catch (error) {
+          console.warn('Document.write failed, using fallback method:', error);
+          
+          // Method 2: Fallback - replace body content
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = htmlContent;
+          
+          // Extract and apply any styles from the content
+          const styles = tempDiv.querySelectorAll('style');
+          styles.forEach(style => {
+            document.head.appendChild(style.cloneNode(true));
+          });
+          
+          // Replace body content
+          document.body.innerHTML = tempDiv.innerHTML;
+          
+          // Execute scripts
+          executeInlineScripts();
+          
+          // Restore reference after fallback
+          setTimeout(() => {
+            if (currentReference) {
+              injectReferenceSystem();
+            }
+          }, 50);
+        }
+      }
+
+      // Execute inline scripts with error handling
+      function executeInlineScripts() {
+        const scripts = document.querySelectorAll('script');
+        scripts.forEach((script, index) => {
+          try {
+            if (script.src) {
+              // External script - create new script element
+              const newScript = document.createElement('script');
+              newScript.src = script.src;
+              newScript.async = script.async;
+              newScript.defer = script.defer;
+              newScript.type = script.type || 'text/javascript';
+              
+              if (script.parentNode) {
+                script.parentNode.replaceChild(newScript, script);
+              }
+            } else if (script.textContent.trim()) {
+              // Inline script - validate and execute
+              let scriptContent = script.textContent;
+              
+              // Basic syntax validation
+              if (!scriptContent.trim()) return;
+              
+              // Convert let/const to var to avoid redeclaration errors
+              scriptContent = scriptContent
+                .replace(/\blet\s+/g, 'var ')
+                .replace(/\bconst\s+/g, 'var ');
+              
+              // Try to execute the script
+              try {
+                eval(scriptContent);
+              } catch (evalError) {
+                console.warn(`Script execution error in script ${index}:`, evalError);
+                console.warn('Script content:', scriptContent);
+              }
+            }
+          } catch (error) {
+            console.warn(`Error processing script ${index}:`, error);
+          }
+        });
+      }
+
+      // Inject reference system from parent window
+      function injectReferenceSystem() {
+        // Request reference system injection from parent
+        window.parent.postMessage({
+          type: 'injectReference',
+          reference: currentReference
+        }, '*');
+      }
+
+      // Inject CSS into the document
+      function injectCSS(cssText) {
+        // Remove existing reference styles
+        const existingStyle = document.getElementById('referenceStyles');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+
+        // Add new styles
+        const style = document.createElement('style');
+        style.id = 'referenceStyles';
+        style.textContent = cssText;
+        document.head.appendChild(style);
+      }
+
+      // Inject JavaScript into the document
+      function injectJS(jsText) {
+        try {
+          // Execute the JavaScript code
+          eval(jsText);
+        } catch (error) {
+          console.warn('Error injecting reference JavaScript:', error);
+        }
+      }
+
+    </script>
   </body>
 </html>

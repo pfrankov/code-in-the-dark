@@ -4,7 +4,7 @@
 }
 
 :root {
-  --font-family: "Press Start 2P", sans-serif;
+  --font-family: "Press Start 2P";
   --primary-color: #3A9364;
   --power-color: #00DDFF;
   --accent-color: #4EFFA1;
@@ -20,7 +20,7 @@
 }
 
 body, html {
-  font-family: var(--font-family);
+  font-family: var(--font-family), monospace;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -34,7 +34,7 @@ body {
 }
 
 button {
-  font-family: var(--font-family);
+  font-family: var(--font-family), monospace;
   appearance: none;
   background-color: var(--primary-color);
   color: var(--white);
@@ -231,88 +231,7 @@ body.power-mode #editor .ace_entity.ace_other.ace_attribute-name {
 }
 
 .instructions-button {
-  float: right;
-}
-
-.reference-screenshot-container {
-  position: absolute;
-  z-index: 10;
   right: 20px;
-  bottom: 80px;
-  cursor: default;
-  display: block;
-  color: var(--white);
-  text-align: right;
-  font-size: 12px;
-  box-sizing: border-box;
-}
-
-.reference-screenshot-container .reference-screenshot {
-  width: 200px;
-  height: auto;
-  margin-top: 15px;
-  display: none;
-  object-fit: contain;
-  max-height: 300px;
-}
-
-.reference-screenshot-container .reference-screenshot img {
-  width: 100%;
-  height: auto;
-  display: block;
-  max-height: 300px;
-  object-fit: contain;
-}
-
-.reference-screenshot-container.active {
-  width: 100%;
-  height: 100%;
-  bottom: 0;
-  left: 0;
-  padding: 25px;
-}
-
-.reference-screenshot-container.active .reference-screenshot {
-  width: 100%;
-  height: 100%;
-  margin-top: 0;
-  object-fit: contain;
-  max-height: none;
-}
-
-.reference-screenshot-container.active .reference-screenshot img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  max-height: none;
-}
-
-.reference-screenshot-container.active span {
-  display: none !important; 
-}
-
-.reference-screenshot-container .no-image-text {
-  display: block;
-}
-
-.reference-screenshot-container .has-image-text {
-  display: none;
-}
-
-.reference-screenshot-container.has-image .no-image-text {
-  display: none;
-}
-
-.reference-screenshot-container.has-image .has-image-text {
-  display: block;
-}
-
-.reference-screenshot-container.has-image .reference-screenshot {
-  display: block;
-}
-
-.reference-screenshot-container.has-image {
-  cursor: pointer;
 }
 
 .name-tag {
@@ -432,7 +351,7 @@ body.power-mode .exclamations .exclamation {
   12.71% { transform: matrix3d(1.032, 0.234, 0, 0, 0.154, 1.032, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
   13.51% { transform: matrix3d(1.044, 0.212, 0, 0, 0.14, 1.044, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
   17.92% { transform: matrix3d(1.07, 0.098, 0, 0, 0.066, 1.07, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
-  18.92% { transform: matrix3d(1.069, 0.077, 0, 0, 0.052, 1.069, 0, 0, 0, 0, 1, 0, 0, 0, 1); }
+  18.92% { transform: matrix3d(1.069, 0.077, 0, 0, 0.052, 1.069, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
   25.23% { transform: matrix3d(1.038, -0.001, 0, 0, -0.001, 1.038, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
   29.03% { transform: matrix3d(1.016, -0.015, 0, 0, -0.01, 1.016, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
   31.43% { transform: matrix3d(1.006, -0.017, 0, 0, -0.011, 1.006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
@@ -487,4 +406,185 @@ body.power-mode .exclamations .exclamation {
   font-size: 48px;
   margin-bottom: 20px;
   display: block;
+}
+
+/* Settings Menu */
+.settings-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.settings-menu-overlay.active {
+  display: flex;
+}
+
+.settings-menu {
+  background: var(--primary-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  color: var(--white);
+  font-family: var(--font-family) monospace;
+}
+
+.settings-menu h2 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: var(--accent-color);
+  text-align: center;
+}
+
+.setting-group {
+  margin-bottom: 20px;
+}
+
+.setting-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10px;
+  color: var(--white);
+}
+
+.setting-group select,
+.setting-group input {
+  width: 100%;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.setting-group select:focus,
+.setting-group input:focus {
+  outline: none;
+}
+
+.ai-settings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--accent-color);
+}
+
+.ai-loader {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--transparent-black);
+  z-index: 99999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+.ai-loader.active {
+  display: flex;
+}
+
+.ai-loader-text {
+  color: var(--white);
+  font-size: 32px;
+  font-family: var(--font-family), monospace;
+}
+
+.reference-screenshot-container {
+  position: fixed;
+  z-index: 40;
+  right: 20px;
+  bottom: 60px;
+  cursor: default;
+  display: block;
+  color: white;
+  text-align: right;
+  font-size: 12px;
+  box-sizing: border-box;
+  font-family: var(--font-family), monospace;
+}
+
+.result-page .reference-screenshot-container {
+  bottom: 20px;
+}
+
+.result-page .reference-screenshot-container .has-image-text {
+  display: none;
+}
+
+.reference-screenshot-container .reference-screenshot {
+  width: 200px;
+  height: auto;
+  margin-top: 15px;
+  display: none;
+  object-fit: contain;
+  max-height: 300px;
+}
+
+.reference-screenshot-container .reference-screenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.reference-screenshot-container.active {
+  width: 100%;
+  height: 100%;
+  bottom: 0;
+  left: 0;
+  padding: 25px;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.reference-screenshot-container.active .reference-screenshot {
+  width: 100%;
+  height: 100%;
+  margin-top: 0;
+  object-fit: contain;
+  max-height: none;
+}
+
+.reference-screenshot-container.active .reference-screenshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: none;
+}
+
+.reference-screenshot-container.active span {
+  display: none !important; 
+}
+
+.reference-screenshot-container .no-image-text {
+  display: block;
+}
+
+.reference-screenshot-container .has-image-text {
+  display: none;
+}
+
+.reference-screenshot-container.has-image .no-image-text {
+  display: none;
+}
+
+.reference-screenshot-container.has-image .has-image-text {
+  display: block;
+}
+
+.reference-screenshot-container.has-image .reference-screenshot {
+  display: block;
+}
+
+.reference-screenshot-container.has-image {
+  cursor: pointer;
 } 
