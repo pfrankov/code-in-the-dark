@@ -4,11 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code in the Dark</title>
-  <script type="module" crossorigin src="./assets/index-BfwdBa4M.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/vendor-D1vGyryr.js">
+  <script type="module" crossorigin src="./assets/index-0quDJY40.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/vendor-CjI5pNDY.js">
   <link rel="stylesheet" crossorigin href="./assets/index-CAyw7Ozz.css">
 </head>
 <body>
-  <div id="root"></div>
+  <div class="drag-drop-overlay">
+    <div class="drag-drop-content">
+      <span class="icon">📁</span>
+      <span data-i18n="ui.dropImageHere">Drop your reference image here</span>
+    </div>
+  </div>
+  <div class="background"></div>
+  <canvas class="canvas-overlay"></canvas>
+  <pre id="editor"></pre>
+  <div class="streak-container">
+      <div class="current" data-i18n="ui.combo">Combo</div>
+      <div class="counter">0</div>
+      <div class="bar"></div>
+      <div class="exclamations"></div>
+  </div>
+  <div class="reference-screenshot-container">
+    <span class="no-image-text" data-i18n="ui.dropReference">Drop a reference</span>
+    <span class="has-image-text" data-i18n="ui.reference">Reference</span>
+    <div class="reference-screenshot"></div>
+  </div>
+
+  <div class="name-tag" data-i18n="ui.unnamed">
+    Unnamed
+  </div>
+
+  <div class="power-mode-indicator">
+    <h1 data-i18n="ui.powerMode">POWER MODE!</h1>
+  </div>
+
+  <!-- Hidden Settings Menu -->
+  <div class="settings-menu-overlay">
+    <div class="settings-menu">
+      <h2>Competition Settings</h2>
+      
+      <div class="setting-group">
+        <label>Competition Mode:</label>
+        <select class="mode-selector">
+          <option value="code">Code Mode (Traditional)</option>
+          <option value="ai">AI Prompt Mode</option>
+        </select>
+      </div>
+
+      <div class="ai-settings" style="display: none;">
+        <div class="setting-group">
+          <label>OpenAI API Base URL:</label>
+          <input type="text" class="api-url" placeholder="https://api.openai.com/v1" />
+        </div>
+        
+        <div class="setting-group">
+          <label>Model:</label>
+          <input type="text" class="api-model" placeholder="gpt-3.5-turbo" />
+        </div>
+        
+        <div class="setting-group">
+          <label>API Token:</label>
+          <input type="password" class="api-token" placeholder="sk-..." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-bar">
+    <button class="finish-button" data-i18n="ui.finish">Finish</button>
+  </div>
+
+  <div class="ai-loader">
+    <div class="ai-loader-text" data-i18n="ai.loader">Generating</div>
+  </div>
+
+  <iframe class="result" src="result.html" frameborder="0"></iframe>
+  
 </body>
 </html>
