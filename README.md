@@ -1,9 +1,12 @@
 # Code in the Dark - AI Edition
 
-A multilingual code editor for "Code in the Dark" competitions with AI-powered features.  
-https://pfrankov.github.io/code-in-the-dark/
+A multilingual code editor for "Code in the Dark" competitions with additional AI-powered mode.  
+![Default Mode](https://github.com/user-attachments/assets/548cbe60-5bf7-46bb-ad31-1507514c30a8)  
+Code in the Dark online: https://pfrankov.github.io/code-in-the-dark/
+
 
 ## Features and differences from the original editor
+- Rewritten from scratch
 - **Multilingual Support**: Automatically detects and supports any language files in the locales folder
 - **Drag & Drop**: Reference image support
 
