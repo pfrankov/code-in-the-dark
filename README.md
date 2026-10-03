@@ -38,12 +38,12 @@ http://localhost:9000/?lang=en
 ## Development
 
 ### Prerequisites
-- Node.js 16+
+- Node.js 22 (also used in CI)
 - npm
 
 ### Installation
 ```bash
-npm install
+npm ci
 ```
 
 ### Development Server
@@ -55,6 +55,9 @@ npm run dev
 ```bash
 npm run build
 ```
+
+Pull requests are built without deployment permissions. Pushes to `main` build
+the site and publish the resulting `dist` artifact to the `gh-pages` branch.
 
 ### Adding New Languages
 Simply create a new locale file in `app/locales/` following the naming convention `{language_code}.json`:
