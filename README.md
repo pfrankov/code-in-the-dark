@@ -56,6 +56,15 @@ npm run dev
 npm run build
 ```
 
+### Browser Tests
+```bash
+npx playwright install chromium
+npm test
+```
+
+The tests use a local server and isolated browser sessions. They cover editor
+restoration, autosave, and scoring; no AI account or API token is needed.
+
 Pull requests are built without deployment permissions. Pushes to `main` build
 the site and publish the resulting `dist` artifact to the `gh-pages` branch.
 

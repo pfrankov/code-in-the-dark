@@ -3,6 +3,8 @@ node_modules/
 
 # Build outputs
 dist/
+test-results/
+playwright-report/
 .tmp/
 
 # Environment variables

@@ -240,9 +240,7 @@ class App {
     const content = this.getFromStorage(this.STORAGE_KEYS.content);
     if (!content) return;
     
-    this.editor.getSession().off("change");
     this.editor.setValue(content, -1);
-    this.bindEvents();
   }
 
   getFromStorage(key) {
